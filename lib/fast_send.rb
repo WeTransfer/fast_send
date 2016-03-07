@@ -72,6 +72,9 @@ class FastSend
   C_Connection = 'Connection'.freeze
   C_close = 'close'.freeze
   C_rack_hijack = 'rack.hijack'.freeze
+  C_dispatch = 'X-Fast-Send-Dispatch'.freeze
+  C_hijack = 'hijack'.freeze
+  C_naive = 'each'.freeze
   
   if RUBY_PLATFORM =~ /java/
     require 'java'
@@ -119,12 +122,14 @@ class FastSend
     if has_robust_hijack_support?(env)
       @logger.debug { 'Server (%s) allows partial hijack, setting up Connection: close'  % server }
       h[C_Connection] = C_close
+      h[C_dispatch] = C_hijack
       response_via_hijack(s, h, b)
     else
       @logger.warn {
         msg = 'Server (%s) has no hijack support or hijacking is broken. Unwanted buffering possible.'
         msg % server
       }
+      h[C_dispatch] = C_naive
       response_via_naive_each(s, h, b)
     end
   end

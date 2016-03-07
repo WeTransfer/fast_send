@@ -74,6 +74,15 @@ describe 'FastSend when used with a mock Socket' do
   end
   
   context 'within a server that has no hijack support (using NaiveEach)' do
+    it 'sets the X-Fast-Send-Dispatch header to "each"' do
+      source_size = (64 + 54) * 1024 * 1024
+      app = ->(env) { [200, {}, EachFileResponse.new] }
+      handler = described_class.new(app)
+      
+      s, h, b = handler.call({})
+      expect(h['X-Fast-Send-Dispatch']).to eq('each')
+    end
+    
     it 'returns a naive each wrapper' do
       source_size = (64 + 54) * 1024 * 1024
       app = ->(env) { [200, {}, EachFileResponse.new] }
@@ -167,6 +176,16 @@ describe 'FastSend when used with a mock Socket' do
     expect {
       handler.call({'rack.hijack?' => true, 'rack.logger' => logger})
     }.to raise_error(/Unknown callback \"fast_send\.mistyped\_header\"/)
+  end
+  
+  it 'sets the X-Fast-Send-Dispatch header to "hijack"' do
+    source_size = (64 + 54) * 1024 * 1024
+    app = ->(env) { [200, {}, EachFileResponse.new] }
+    
+    handler = described_class.new(app)
+    
+    status, headers, body = handler.call({'rack.hijack?' => true, 'rack.logger' => logger})
+    expect(headers['X-Fast-Send-Dispatch']).to eq('hijack')
   end
   
   it 'sends the files to the socket using sendfile()' do
