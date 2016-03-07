@@ -201,7 +201,7 @@ describe 'FastSend when used with a mock Socket' do
     output = Tempfile.new('response_body')
     
     fake_socket = FakeSocketWithSendfile.new(output)
-    if described_class::USE_BLOCKING_SENDFILE
+    if described_class::SocketHandler::USE_BLOCKING_SENDFILE
       expect(fake_socket).to receive(:sendfile).at_least(:once).and_call_original
     else
       expect(fake_socket).to receive(:trysendfile).at_least(:once).and_call_original
