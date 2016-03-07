@@ -12,6 +12,7 @@ doc
 # bundler
 .bundle
 Gemfile.lock
+.ruby-version
 
 # jeweler generated
 pkg
