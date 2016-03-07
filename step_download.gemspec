@@ -25,7 +25,8 @@ Gem::Specification.new do |s|
     "lib/fast_send.rb",
     "spec/fast_send_with_mocks_spec.rb",
     "spec/fast_send_with_puma_spec.rb",
-    "spec/test_app.ru"
+    "spec/test_app.ru",
+    "step_download.gemspec"
   ]
   s.homepage = "https://gitlab.wetransfer.net/julik/fast_send"
   s.licenses = ["Proprietary"]
