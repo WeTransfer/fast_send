@@ -1,4 +1,3 @@
-require 'logger'
 # A Rack middleware that sends the response using file buffers. If the response body
 # returned by the upstream application supports "each_file", then the middleware will
 # call this method, grab each yielded file in succession and use the fastest possible
