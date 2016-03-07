@@ -62,19 +62,8 @@ class FastSend
   # more control.C
   SENDFILE_CHUNK_SIZE = 2*1024*1024
   
-  # Cache some strings for mem use
-  NOOP = ->(*){}.freeze
-  NULL_LOGGER = Logger.new($stderr)
-  
   # All exceptions that get raised when the client closes a connection before receiving the entire response
   CLIENT_DISCONNECTS = [SlowLoris, Errno::EPIPE, Errno::ECONNRESET, Errno::ENOTCONN, Errno::EPROTOTYPE]
-  
-  C_Connection = 'Connection'.freeze
-  C_close = 'close'.freeze
-  C_rack_hijack = 'rack.hijack'.freeze
-  C_dispatch = 'X-Fast-Send-Dispatch'.freeze
-  C_hijack = 'hijack'.freeze
-  C_naive = 'each'.freeze
   
   if RUBY_PLATFORM =~ /java/
     require 'java'
@@ -106,6 +95,17 @@ class FastSend
       cleanup.call(written)
     end
   end
+  
+  NOOP = ->(*){}.freeze
+  NULL_LOGGER = Logger.new($stderr)
+  C_Connection = 'Connection'.freeze
+  C_close = 'close'.freeze
+  C_rack_hijack = 'rack.hijack'.freeze
+  C_dispatch = 'X-Fast-Send-Dispatch'.freeze
+  C_hijack = 'hijack'.freeze
+  C_naive = 'each'.freeze
+  
+  private_constant :C_Connection, :C_close, :C_rack_hijack, :C_dispatch, :C_hijack, :C_naive, :NOOP, :NULL_LOGGER
   
   def initialize(with_rack_app)
     @app = with_rack_app
