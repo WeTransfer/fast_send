@@ -104,8 +104,20 @@ class FastSend
   C_dispatch = 'X-Fast-Send-Dispatch'.freeze
   C_hijack = 'hijack'.freeze
   C_naive = 'each'.freeze
+  C_rack_logger = 'rack.logger'.freeze
+  C_SERVER_SOFTWARE = 'SERVER_SOFTWARE'.freeze
   
-  private_constant :C_Connection, :C_close, :C_rack_hijack, :C_dispatch, :C_hijack, :C_naive, :NOOP, :NULL_LOGGER
+  private_constant :C_Connection, :C_close, :C_rack_hijack, :C_dispatch, :C_hijack, :C_naive, :NOOP, :NULL_LOGGER,
+    :C_rack_logger, :C_SERVER_SOFTWARE
+  
+  CALLBACK_HEADER_NAMES = %w( 
+    fast_send.started
+    fast_send.aborted
+    fast_send.error
+    fast_send.complete
+    fast_send.bytes_sent
+    fast_send.cleanup
+  ).freeze
   
   def initialize(with_rack_app)
     @app = with_rack_app
@@ -115,9 +127,9 @@ class FastSend
     s, h, b = @app.call(env)
     return [s, h, b] unless b.respond_to?(:each_file) 
     
-    @logger = env.fetch('rack.logger') { NULL_LOGGER }
+    @logger = env.fetch(C_rack_logger) { NULL_LOGGER }
     
-    server = env['SERVER_SOFTWARE']
+    server = env[C_SERVER_SOFTWARE]
     
     if has_robust_hijack_support?(env)
       @logger.debug { 'Server (%s) allows partial hijack, setting up Connection: close'  % server }
@@ -146,15 +158,6 @@ class FastSend
     body = NaiveEach.new(b, *callbacks_from_headers(h))
     [s, h, body]
   end
-  
-  CALLBACK_HEADER_NAMES = %w( 
-    fast_send.started
-    fast_send.aborted
-    fast_send.error
-    fast_send.complete
-    fast_send.bytes_sent
-    fast_send.cleanup
-  ).freeze
   
   def callbacks_from_headers(h)
     headers_related = h.keys.grep(/^fast\_send\./i)
@@ -211,7 +214,6 @@ class FastSend
         aborted_proc.call(e)
       rescue Exception => e
         @logger.fatal { "Aborting response due to error: #{e.class}(#{e.message})" }
-        (e.backtrace || [])[0..50].each{|line| @logger.fatal { line } }
         aborted_proc.call(e)
         error_proc.call(e)
       ensure
