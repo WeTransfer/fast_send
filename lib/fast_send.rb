@@ -333,8 +333,10 @@ class FastSend
       read_at = file.size - remaining
       num_bytes_written = input_channel.transferTo(read_at, send_this_time, output_channel)
       
-      remaining -= num_bytes_written
-      yield(num_bytes_written)
+      if num_bytes_written.nonzero?
+        remaining -= num_bytes_written
+        yield(num_bytes_written)
+      end
     end
   ensure
     input_channel.close
