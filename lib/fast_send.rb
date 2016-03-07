@@ -33,6 +33,7 @@ require 'logger'
 #    `fast_send.cleanup' => ->(sent_total) { } # Called at the end of the response, in an ensure block
 class FastSend
   require_relative 'fast_send/socket_handler'
+  require_relative 'fast_send/null_logger'
   
   VERSION = '1.1.0'
   
@@ -78,7 +79,6 @@ class FastSend
   end
   
   NOOP = ->(*){}.freeze
-  NULL_LOGGER = Logger.new($stderr)
   C_Connection = 'Connection'.freeze
   C_close = 'close'.freeze
   C_rack_hijack = 'rack.hijack'.freeze
@@ -88,7 +88,8 @@ class FastSend
   C_rack_logger = 'rack.logger'.freeze
   C_SERVER_SOFTWARE = 'SERVER_SOFTWARE'.freeze
   
-  private_constant :C_Connection, :C_close, :C_rack_hijack, :C_dispatch, :C_hijack, :C_naive, :NOOP, :NULL_LOGGER,
+  private_constant :NullLogger
+  private_constant :C_Connection, :C_close, :C_rack_hijack, :C_dispatch, :C_hijack, :C_naive, :NOOP,
     :C_rack_logger, :C_SERVER_SOFTWARE
   
   CALLBACK_HEADER_NAMES = %w( 
@@ -108,7 +109,7 @@ class FastSend
     s, h, b = @app.call(env)
     return [s, h, b] unless b.respond_to?(:each_file) 
     
-    @logger = env.fetch(C_rack_logger) { NULL_LOGGER }
+    @logger = env.fetch(C_rack_logger) { NullLogger }
     
     server = env[C_SERVER_SOFTWARE]
     
