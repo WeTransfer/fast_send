@@ -306,8 +306,10 @@ class FastSend
       send_this_time = remaining < chunk ? remaining : chunk
       num_bytes_written = IO.copy_stream(file, socket, send_this_time)
       
-      remaining -= num_bytes_written
-      yield(num_bytes_written)
+      if num_bytes_written.nonzero?
+        remaining -= num_bytes_written
+        yield(num_bytes_written)
+      end
     end
   end
   
