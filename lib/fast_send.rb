@@ -33,7 +33,7 @@ require 'logger'
 #    `fast_send.error' => ->(exception) { } # the response is not sent completely due to an error in the application
 #    `fast_send.cleanup' => ->(sent_total) { } # Called at the end of the response, in an ensure block
 class FastSend
-  VERSION = '1.0.0'
+  VERSION = '1.0.1'
   
   # How many seconds we will wait before considering a client dead.
   SOCKET_TIMEOUT = 185
