@@ -63,12 +63,12 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
       aborted_proc.call(e)
       error_proc.call(e)
     ensure
-      logger.debug { "Performing cleanup" }
-      cleanup_proc.call(bytes_written)
       # With rack.hijack the consensus seems to be that the hijack
       # proc is responsible for closing the socket. We also use no-keepalive
       # so this should not pose any problems.
       socket.close unless socket.closed?
+      logger.debug { "Performing cleanup" }
+      cleanup_proc.call(bytes_written)
     end
   end
   

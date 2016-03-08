@@ -332,6 +332,42 @@ describe 'FastSend when used with a mock Socket' do
     end
   end
   
+  it 'closes the socket even when the cleanup proc raises' do
+    source_size = (64 + 54) * 1024 * 1024
+    callbacks = []
+    
+    app = ->(env) {
+      [200, {
+        'fast_send.cleanup' => ->(b){ raise "Failed when executing the cleanup callbacks" },
+      }, EachFileResponse.new]
+    }
+    
+    handler = described_class.new(app)
+    status, headers, body = handler.call({'rack.hijack?' => true})
+    
+    keys = headers.keys
+    expect(keys.grep(/fast\_send/)).to be_empty # The callback headers should be removed
+    
+    expect(status).to eq(200)
+    expect(body).to eq([])
+    
+    fake_socket = double('Socket')
+    
+    allow(fake_socket).to receive(:respond_to?).with(:sendfile) { false }
+    allow(fake_socket).to receive(:respond_to?).with(:to_path) { false } # called by IO.copy_stream
+    
+    expect(fake_socket).to receive(:closed?) { false }
+    allow(fake_socket).to receive(:write) {|data| data.bytesize }
+    
+    expect(fake_socket).to receive(:closed?) { false }
+    expect(fake_socket).to receive(:close) # The socket MUST be closed at the end of hijack
+    
+    hijack = headers.fetch('rack.hijack')
+    expect {
+      hijack.call(fake_socket)
+    }.to raise_error(/Failed when executing the cleanup callback/)
+  end
+  
   it 'passes the exception to the fast_send.error proc' do
     source_size = (64 + 54) * 1024 * 1024
     
