@@ -4,7 +4,7 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
   :done_proc, :written_proc, :cleanup_proc)
   
   # How many seconds we will wait before considering a client dead.
-  SOCKET_TIMEOUT = 185
+  SOCKET_TIMEOUT = 60
   
   # The time between select() calls when a socket is blocking on write
   SELECT_TIMEOUT_ON_BLOCK = 5
@@ -89,7 +89,11 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
   def fire_timeout_using_select(writable_socket)
     at = Time.now
     loop do
-      return if IO.select(nil, [writable_socket], [writable_socket], SELECT_TIMEOUT_ON_BLOCK)
+      _, writeables, errored = IO.select(nil, [writable_socket], [writable_socket], SELECT_TIMEOUT_ON_BLOCK)
+      return if writeables.include?(writable_socket) 
+      if errored.include?(writable_socket)
+        raise SlowLoris, "Receiving socket had an error, connection will be dropped"
+      end
       if (Time.now - at) > SOCKET_TIMEOUT
         raise SlowLoris, "Receiving socket timed out on sendfile(), probably a dead slow loris"
       end
