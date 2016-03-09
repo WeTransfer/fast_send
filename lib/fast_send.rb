@@ -34,7 +34,7 @@ class FastSend
   require_relative 'fast_send/socket_handler'
   require_relative 'fast_send/null_logger'
   
-  VERSION = '1.1.1'
+  VERSION = '1.1.2'
   
   # All exceptions that get raised when the client closes a connection before receiving the entire response
   CLIENT_DISCONNECTS = [Errno::EPIPE, Errno::ECONNRESET, Errno::ENOTCONN, Errno::EPROTOTYPE]
