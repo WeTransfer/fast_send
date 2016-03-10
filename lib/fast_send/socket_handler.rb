@@ -90,8 +90,10 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
     at = Time.now
     loop do
       _, writeables, errored = IO.select(nil, [writable_socket], [writable_socket], SELECT_TIMEOUT_ON_BLOCK)
-      return if writeables.include?(writable_socket) 
-      if errored.include?(writable_socket)
+      if writeables && writeables.include?(writable_socket) 
+        return # We can proceed
+      end
+      if errored && errored.include?(writable_socket)
         raise SlowLoris, "Receiving socket had an error, connection will be dropped"
       end
       if (Time.now - at) > SOCKET_TIMEOUT

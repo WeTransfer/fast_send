@@ -445,4 +445,7 @@ describe 'FastSend when used with a mock Socket' do
     hijack = headers.fetch('rack.hijack')
     hijack.call(fake_socket)
   end
+  
+  it 'halts the response when the socket times out in IO.select'
+  it 'halts the response when the socket errors in IO.select'
 end
