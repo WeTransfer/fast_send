@@ -15,8 +15,8 @@ FastSend is a Rack middleware. Insert it before your application.
 
 In normal circumstances FastSend will just do nothing. You have to explicitly trigger it
 by returning a special response body object. The convention is that this object must respond
-to `each_file` instead of the standard Rack `each`. Note that you _must_ return a real Ruby `File`
-object or it's subclass, because some fairly low-level operations will be done to it - so a duck-typed
+to `each_file` instead of the standard Rack `each`. Note that you _must_ yield real Ruby `File`
+objects or subclasses, because some fairly low-level operations will be done to them - so a duck-typed
 "file-like" object is not good enough.
 
     class BigResponse

@@ -16,8 +16,8 @@ require_relative 'lib/fast_send'
 Jeweler::Tasks.new do |gem|
   gem.version = FastSend::VERSION
   gem.name = "fast_send"
-  gem.homepage = "https://gitlab.wetransfer.net/julik/fast_send"
-  gem.license = "Proprietary"
+  gem.homepage = "https://github.com/WeTransfer/fast_send"
+  gem.license = "MIT"
   gem.description = %Q{Send bursts of large files quickly via Rack}
   gem.summary = %Q{and do so bypassing the Ruby VM}
   gem.email = "me@julik.nl"
