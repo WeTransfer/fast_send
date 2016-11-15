@@ -11,14 +11,16 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib"]
   s.authors = ["Julik Tarkhanov"]
-  s.date = "2016-03-09"
+  s.date = "2016-11-15"
   s.description = "Send bursts of large files quickly via Rack"
   s.email = "me@julik.nl"
   s.extra_rdoc_files = [
+    "LICENSE.txt",
     "README.md"
   ]
   s.files = [
     "Gemfile",
+    "LICENSE.txt",
     "README.md",
     "Rakefile",
     "config.ru",
@@ -30,9 +32,9 @@ Gem::Specification.new do |s|
     "spec/fast_send_with_puma_spec.rb",
     "spec/test_app.ru"
   ]
-  s.homepage = "https://gitlab.wetransfer.net/julik/fast_send"
-  s.licenses = ["Proprietary"]
-  s.rubygems_version = "2.2.2"
+  s.homepage = "https://github.com/WeTransfer/fast_send"
+  s.licenses = ["MIT"]
+  s.rubygems_version = "2.4.5.1"
   s.summary = "and do so bypassing the Ruby VM"
 
   if s.respond_to? :specification_version then
