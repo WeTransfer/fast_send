@@ -1,5 +1,7 @@
 require_relative '../lib/fast_send'
 require 'logger'
+require 'tempfile'
+
 describe 'FastSend when used with a mock Socket' do
   let(:logger) {
     Logger.new(nil).tap{|l| l.level = Logger::DEBUG }

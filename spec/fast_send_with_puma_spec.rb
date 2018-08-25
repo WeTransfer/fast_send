@@ -1,5 +1,6 @@
 require_relative '../lib/fast_send'
 require 'net/http'
+require 'tempfile'
 
 describe 'FastSend when used in combination with Puma' do
   before :all do
