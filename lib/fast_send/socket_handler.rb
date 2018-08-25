@@ -63,9 +63,10 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
       logger.warn { "Client closed connection: #{e.class}(#{e.message})" }
       aborted_proc.call(e)
     rescue Exception => e
-      logger.fatal { "Aborting response due to error: #{e.class}(#{e.message})" }
+      logger.fatal { "Aborting response due to error: #{e.class}(#{e.message}) and will propagate" }
       aborted_proc.call(e)
       error_proc.call(e)
+      raise e unless StandardError === e # Re-raise system errors, signals and other Exceptions
     ensure
       # With rack.hijack the consensus seems to be that the hijack
       # proc is responsible for closing the socket. We also use no-keepalive
