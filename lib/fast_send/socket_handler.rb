@@ -12,6 +12,10 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
   # Is raised when it is not possible to send a chunk of data
   # to the client using non-blocking sends for longer than the preset timeout
   SlowLoris = Class.new(StandardError)
+
+  # Exceptions that indicate a client being too slow or dropping out
+  # due to failing reads/writes
+  CLIENT_DISCONNECT_EXCEPTIONS = [SlowLoris] + ::FastSend::CLIENT_DISCONNECTS
   
   # Whether we are forced to use blocking IO for sendfile()
   USE_BLOCKING_SENDFILE = !!(RUBY_PLATFORM =~ /darwin/)
@@ -55,7 +59,7 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
       
       logger.info { "Response written in full - %d bytes" % bytes_written }
       done_proc.call(bytes_written)
-    rescue *client_disconnect_exeptions => e
+    rescue *CLIENT_DISCONNECT_EXCEPTIONS => e
       logger.warn { "Client closed connection: #{e.class}(#{e.message})" }
       aborted_proc.call(e)
     rescue Exception => e
@@ -71,14 +75,6 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
       cleanup_proc.call(bytes_written)
     end
   end
-  
-  # Returns an array of Exception classes we can rescue from (using a splat)
-  #
-  # @return [Array<Class>] the classes
-  def client_disconnect_exeptions
-    [SlowLoris] + ::FastSend::CLIENT_DISCONNECTS
-  end
-  
 
   # This is majorly useful - if the socket is not selectable after a certain
   # timeout, it might be a slow loris or a connection that hung up on us. So if
