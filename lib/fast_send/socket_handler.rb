@@ -91,7 +91,7 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
     
       # Use exact offsets to avoid boobytraps
       send_this_time = remaining < chunk ? remaining : chunk
-      num_bytes_written = IO.copy_stream(file, socket, send_this_time)
+      num_bytes_written = IO.copy_stream(file, socket, send_this_time, file.size - remaining)
     
       if num_bytes_written.nonzero?
         remaining -= num_bytes_written
