@@ -1,9 +1,7 @@
 source 'https://rubygems.org'
 
+gemspec
+
 group :development do
-  gem 'rake'
-  gem 'jeweler', '> 2'
-  gem 'rspec', '~> 3'
-  gem 'puma'
   gem 'sendfile', platforms: :mri
 end

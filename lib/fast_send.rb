@@ -31,8 +31,6 @@
 #    `fast_send.error' => ->(exception) { } # the response is not sent completely due to an error in the application
 #    `fast_send.cleanup' => ->(sent_total) { } # Called at the end of the response, in an ensure block
 class FastSend
-  VERSION = '1.1.2'
-  
   # All exceptions that get raised when the client closes a connection before receiving the entire response
   CLIENT_DISCONNECTS = [Errno::EPIPE, Errno::ECONNRESET, Errno::ENOTCONN, Errno::EPROTOTYPE]
   
@@ -41,6 +39,7 @@ class FastSend
     CLIENT_DISCONNECTS << Java::JavaIo::IOException
   end
 
+  require_relative 'fast_send/version'
   require_relative 'fast_send/socket_handler'
   require_relative 'fast_send/null_logger'
 

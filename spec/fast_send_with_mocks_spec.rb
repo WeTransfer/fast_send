@@ -329,8 +329,8 @@ describe 'FastSend when used with a mock Socket' do
     
     bytes_sent_cbs = callbacks[1..-3]
     bytes_sent_cbs.each_with_index do | c, i |
-      expect(c[1]).to be_kind_of(Fixnum)
-      expect(c[2]).to be_kind_of(Fixnum)
+      expect(c[1]).to be_kind_of(Integer)
+      expect(c[2]).to be_kind_of(Integer)
     end
   end
   

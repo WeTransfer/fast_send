@@ -107,7 +107,7 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
   #
   # @param socket[Socket] the socket to write to
   # @param file[File] the IO you can read from
-  # @yields num_bytes_written[Fixnum] the number of bytes written on each `IO.copy_stream() call`
+  # @yields num_bytes_written[Integer] the number of bytes written on each `IO.copy_stream() call`
   # @return [void]
   def sendfile(socket, file)
     chunk = SENDFILE_CHUNK_SIZE
@@ -149,7 +149,7 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
   #
   # @param socket[Socket] the socket to write to
   # @param file[File] the IO you can read from
-  # @yields num_bytes_written[Fixnum] the number of bytes written on each `IO.copy_stream() call`
+  # @yields num_bytes_written[Integer] the number of bytes written on each `IO.copy_stream() call`
   # @return [void]
   def copy_stream(socket, file)
     chunk = SENDFILE_CHUNK_SIZE
@@ -174,7 +174,7 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
   #
   # @param socket[Socket] the socket to write to
   # @param file[File] the IO you can read from
-  # @yields num_bytes_written[Fixnum] the number of bytes written on each `IO.copy_stream() call`
+  # @yields num_bytes_written[Integer] the number of bytes written on each `IO.copy_stream() call`
   # @return [void]
   def copy_nio(socket, file)
     chunk = SENDFILE_CHUNK_SIZE
