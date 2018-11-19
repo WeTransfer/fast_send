@@ -12,11 +12,6 @@ describe 'FastSend when used in combination with Puma' do
   end
 
   it 'offers the file for download, sends the entire file' do
-    begin
-      require 'sendfile'
-    rescue LoadError # jruby et al
-    end
-    
     tries = 0
     begin
       headers = {}

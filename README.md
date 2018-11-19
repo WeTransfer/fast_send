@@ -59,8 +59,6 @@ Fundamentally, FastSend takes your Ruby File handles, one by one (you can `yield
 and uses the fastest way possible, as available in your Ruby runtime, to send the file to the Rack webserver socket.
 The options it tries are:
 
-* non-blocking `sendfile(2)` call - if you have the "sendfile" gem, only on MRI/Rubinius, only on Linux
-* blocking `sendfile(2)` call - if you have the "sendfile" gem, only on MRI/Rubinius, also works on OSX
 * Java's NIO transferTo() call - if you are on jRuby
 * IO.copy_stream() for all other cases
 

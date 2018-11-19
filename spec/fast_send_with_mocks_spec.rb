@@ -28,24 +28,6 @@ describe 'FastSend when used with a mock Socket' do
     end
   end
   
-  class FakeSocketWithSendfile < FakeSocket
-    def sendfile(file, read_at_offset, send_this_time)
-      raise 'closed' if @closed
-      file.pos = read_at_offset
-      @out << file.read(send_this_time)
-      send_this_time 
-    end
-    
-    def trysendfile(file, read_at_offset, send_this_time)
-      raise 'closed' if @closed
-      file.pos = read_at_offset
-      @out << file.read(send_this_time)
-      send_this_time
-    end
-    
-    undef :write
-  end
-  
   class EachFileResponse
     def each_file
       f1 = Tempfile.new('x').tap{|f| 64.times{ f << Random.new.bytes(1024 * 1024)}; f.flush; f.rewind }
