@@ -77,28 +77,6 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
     end
   end
 
-  # This is majorly useful - if the socket is not selectable after a certain
-  # timeout, it might be a slow loris or a connection that hung up on us. So if
-  # the return from select() is nil, we know that we still cannot write into
-  # the socket for some reason. Kill the request, it is dead, jim.
-  #
-  # Note that this will not work on OSX due to a sendfile() bug.
-  def fire_timeout_using_select(writable_socket)
-    at = Time.now
-    loop do
-      _, writeables, errored = IO.select(nil, [writable_socket], [writable_socket], SELECT_TIMEOUT_ON_BLOCK)
-      if writeables && writeables.include?(writable_socket) 
-        return # We can proceed
-      end
-      if errored && errored.include?(writable_socket)
-        raise SlowLoris, "Receiving socket had an error, connection will be dropped"
-      end
-      if (Time.now - at) > SOCKET_TIMEOUT
-        raise SlowLoris, "Receiving socket timed out on sendfile(), probably a dead slow loris"
-      end
-    end
-  end
-
   # Copies the file to the socket using sendfile().
   # If we are not running on Darwin we are going to use a non-blocking version of
   # sendfile(), and send the socket into a select() wait loop. If no data can be written
@@ -120,24 +98,27 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
       send_this_time = remaining < chunk ? remaining : chunk
       read_at_offset = file.size - remaining
     
-      # We have to use blocking "sendfile" on Darwin because the non-blocking version
-      # is buggy
-      # (in an end-to-end test the number of bytes received varies).
-      written = if USE_BLOCKING_SENDFILE
-        socket.sendfile(file, read_at_offset, send_this_time)
-      else
-        socket.trysendfile(file, read_at_offset, send_this_time)
+      # Use sendfile in a blocking fashion since we only have one thread blocking.
+      # Note that on Linux the blocking sendfile _is_ likely to raise an EPIPE
+      epipes_seen_for_chunk = 0
+      max_epipes_in_a_row = 100
+      sleep_millis = 100
+      
+      written = begin
+        socket.sendfile(file, read_at_offset, send_this_time).tap { epipes_seen_for_chunk = 0 }
+      rescue Errno::EPIPE => epipe
+        $stderr.puts("EPIPE seen for #{epipes_seen_for_chunk} times now, will retry later #{socket.inspect}")
+        epipes_seen_for_chunk += 1
+        if epipes_seen_for_chunk >= max_epipes_in_a_row
+          $stderr.puts("Seen max EPIPEs and will terminate the client #{socket.inspect}")
+          raise epipe 
+        else
+          sleep(sleep_millis / 1000)
+          retry
+        end
       end
-    
-      # Will be only triggered when using non-blocking "trysendfile", i.e. on Linux.
-      if written == :wait_writable
-        fire_timeout_using_select(socket) # Used to evict slow lorises
-      elsif written.nil? # Also only relevant for "trysendfile"
-        return # We are done, nil == EOF
-      else
-        remaining -= written
-        yield(written)
-      end
+      remaining -= written
+      yield(written)
     end
   end
 
