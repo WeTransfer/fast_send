@@ -1,3 +1,5 @@
+require 'io/wait'
+
 # Handles the TCP socket within the Rack hijack. Is used instead of a Proc object for better
 # testability and better deallocation
 class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :aborted_proc, :error_proc, 
@@ -84,18 +86,17 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
   #
   # Note that this will not work on OSX due to a sendfile() bug.
   def fire_timeout_using_select(writable_socket)
-    at = Time.now
+    started_polling_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    select_timeout_secs = 0.25
+    sleep_after_select_timeout_secs = 0.5
     loop do
-      _, writeables, errored = IO.select(nil, [writable_socket], [writable_socket], SELECT_TIMEOUT_ON_BLOCK)
-      if writeables && writeables.include?(writable_socket) 
-        return # We can proceed
-      end
-      if errored && errored.include?(writable_socket)
-        raise SlowLoris, "Receiving socket had an error, connection will be dropped"
-      end
-      if (Time.now - at) > SOCKET_TIMEOUT
+      socket_or_nil = writable_socket.wait_writable(SELECT_TIMEOUT_ON_BLOCK)
+      return if socket_or_nil # socket became writable
+      now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      if (now - started_polling_at) > SOCKET_TIMEOUT
         raise SlowLoris, "Receiving socket timed out on sendfile(), probably a dead slow loris"
       end
+      sleep(sleep_after_select_timeout_secs)
     end
   end
 
