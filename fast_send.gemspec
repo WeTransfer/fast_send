@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib"]
   s.authors = ["Julik Tarkhanov"]
-  s.date = "2016-11-15"
+  s.date = Time.now.utc.strftime("%Y-%m-%d")
   s.description = "Send bursts of large files quickly via Rack"
   s.email = "me@julik.nl"
   s.extra_rdoc_files = [
