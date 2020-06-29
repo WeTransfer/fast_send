@@ -30,8 +30,6 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
   SENDFILE_CHUNK_SIZE = 2*1024*1024
 
   def call(socket)
-    return if socket.closed?
-    
     writer_method_name = if socket.respond_to?(:sendfile)
       :sendfile
     elsif RUBY_PLATFORM == 'java'
@@ -39,44 +37,40 @@ class FastSend::SocketHandler < Struct.new(:stream, :logger, :started_proc, :abo
     else
       :copy_stream
     end
-    
-    logger.debug { "Will do file-to-socket using %s" % writer_method_name }
-    
-    begin
-      logger.debug { "Starting the response" }
-      
-      bytes_written = 0
-      
-      started_proc.call(bytes_written)
-      
-      stream.each_file do | file |
-        logger.debug { "Sending %s" % file.inspect }
-        # Run the sending method, depending on the implementation
-        send(writer_method_name, socket, file) do |n_bytes_sent|
-          bytes_written += n_bytes_sent
-          logger.debug { "Written %d bytes" % bytes_written }
-          written_proc.call(n_bytes_sent, bytes_written)
-        end
+
+    logger.debug { "Starting the response, writing via #{writer_method_name}" }
+    bytes_written = 0
+    started_proc.call(bytes_written)
+
+    return if socket.closed? # Only do this now as we need to have bytes_written set
+
+    stream.each_file do | file |
+      logger.debug { "Sending %s" % file.inspect }
+      # Run the sending method, depending on the implementation
+      send(writer_method_name, socket, file) do |n_bytes_sent|
+        bytes_written += n_bytes_sent
+        logger.debug { "Written %d bytes" % bytes_written }
+        written_proc.call(n_bytes_sent, bytes_written)
       end
-      
-      logger.info { "Response written in full - %d bytes" % bytes_written }
-      done_proc.call(bytes_written)
-    rescue *CLIENT_DISCONNECT_EXCEPTIONS => e
-      logger.warn { "Client closed connection: #{e.class}(#{e.message})" }
-      aborted_proc.call(e)
-    rescue Exception => e
-      logger.fatal { "Aborting response due to error: #{e.class}(#{e.message}) and will propagate" }
-      aborted_proc.call(e)
-      error_proc.call(e)
-      raise e unless StandardError === e # Re-raise system errors, signals and other Exceptions
-    ensure
-      # With rack.hijack the consensus seems to be that the hijack
-      # proc is responsible for closing the socket. We also use no-keepalive
-      # so this should not pose any problems.
-      socket.close unless socket.closed?
-      logger.debug { "Performing cleanup" }
-      cleanup_proc.call(bytes_written)
     end
+    
+    logger.info { "Response written in full - %d bytes" % bytes_written }
+    done_proc.call(bytes_written)
+  rescue *CLIENT_DISCONNECT_EXCEPTIONS => e
+    logger.warn { "Client closed connection: #{e.class}(#{e.message})" }
+    aborted_proc.call(e)
+  rescue Exception => e
+    logger.fatal { "Aborting response due to error: #{e.class}(#{e.message}) and will propagate" }
+    aborted_proc.call(e)
+    error_proc.call(e)
+    raise e unless StandardError === e # Re-raise system errors, signals and other Exceptions
+  ensure
+    # With rack.hijack the consensus seems to be that the hijack
+    # proc is responsible for closing the socket. We also use no-keepalive
+    # so this should not pose any problems.
+    socket.close unless socket.closed?
+    logger.debug { "Performing cleanup" }
+    cleanup_proc.call(bytes_written)
   end
 
   # This is majorly useful - if the socket is not selectable after a certain
