@@ -239,7 +239,29 @@ describe 'FastSend when used with a mock Socket' do
     
     expect(output.size).to eq(source_size)
   end
-  
+
+  it 'calls the cleanup proc even if the socket enters the handler in a closed state' do
+    source_size = (64 + 54) * 1024 * 1024
+    cleanup_proc = double('Cleanup')
+    app = ->(env) { [200, {'fast_send.cleanup' => cleanup_proc}, EachFileResponse.new] }
+    
+    handler = described_class.new(app)
+    
+    status, headers, body = handler.call({'rack.hijack?' => true, 'rack.logger' => logger})
+    expect(status).to eq(200)
+    expect(body).to eq([])
+    
+    output = Tempfile.new('response_body')
+    
+    already_closed_socket = FakeSocket.new(output)
+    already_closed_socket.close
+
+    hijack = headers.fetch('rack.hijack')
+
+    # The cleanup proc gets called with the number of bytes transferred
+    expect(cleanup_proc).to receive(:call).with(0)
+    hijack.call(already_closed_socket)
+  end
   
   it 'can execute the hijack proc twice without resending the data' do
     source_size = (64 + 54) * 1024 * 1024
