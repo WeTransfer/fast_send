@@ -31,8 +31,9 @@
 #    `fast_send.error' => ->(exception) { } # the response is not sent completely due to an error in the application
 #    `fast_send.cleanup' => ->(sent_total) { } # Called at the end of the response, in an ensure block
 class FastSend
-  # All exceptions that get raised when the client closes a connection before receiving the entire response
-  CLIENT_DISCONNECTS = [Errno::EPIPE, Errno::ECONNRESET, Errno::ENOTCONN, Errno::EPROTOTYPE]
+  # All exceptions that get raised when the client closes a connection before receiving the entire response.
+  # IOError can be raised when an IO times out in IO.select()
+  CLIENT_DISCONNECTS = [Errno::EPIPE, Errno::ECONNRESET, Errno::ENOTCONN, Errno::EPROTOTYPE, IOError]
   
   if RUBY_PLATFORM =~ /java/
     require 'java'
